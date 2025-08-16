@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>User Profile Directory</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" xintegrity="sha512-SnH5WK+bZxgPHs44uWIX+LLJAJ9/2PkPKZ5QiAj6Ta86w+fsb2TkcmfRyVX3pBnMFcV7oQPJkl9QevSCWr3W6A==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+</head>
+<body class="bg-gray-100 text-gray-900 transition-colors duration-300" id="appBody">
+  
+  <!-- Header -->
+  <header class="flex justify-between items-center px-6 py-4 bg-blue-600 text-white">
+    <h1 class="text-2xl font-bold">Dawodu  Ayobami User Profile Directory</h1>
+    <div class="flex items-center gap-3">
+      <input type="text" id="searchInput" placeholder="Search by name..."
+        class="px-3 py-2 rounded border border-gray-300 text-black" />
+      <button id="darkModeToggle" class="bg-gray-800 px-4 py-2 rounded text-gray-900 hover:bg-gray-700"><i class="fa-solid fa-moon text-yellow-400"></i></button>
+    </div>
+  </header>
+
+  <!-- Main -->
+  <main class="p-6">
+    <div id="loading" class="text-center py-6 text-lg font-medium">Loading users...</div>
+    <div id="error" class="hidden text-center py-6 text-red-600 font-semibold"></div>
+    <div id="userGrid" class="grid gap-6 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4"></div>
+  </main>
+
+  <script>
+    const API_URL = "https://jsonplaceholder.typicode.com/users";
+    const userGrid = document.getElementById("userGrid");
+    const loading = document.getElementById("loading");
+    const error = document.getElementById("error");
+    const searchInput = document.getElementById("searchInput");
+    const darkModeToggle = document.getElementById("darkModeToggle");
+    const appBody = document.getElementById("appBody");
+    
+    let allUsers = [];
+
+    // Fetch and display users
+    async function fetchUsers() {
+      try {
+        const res = await fetch(API_URL);
+        if (!res.ok) throw new Error("Failed to fetch users");
+        const data = await res.json();
+        allUsers = data;
+        displayUsers(data);
+      } catch (err) {
+        error.textContent = err.message;
+        error.classList.remove("hidden");
+      } finally {
+        loading.style.display = "none";
+      }
+    }
+
+    function displayUsers(users) {
+      userGrid.innerHTML = "";
+      if (users.length === 0) {
+        userGrid.innerHTML = `<p class="col-span-full text-center text-gray-500">No users found.</p>`;
+        return;
+      }
+      users.forEach(user => {
+        const card = document.createElement("div");
+        card.className = "bg-white p-4 rounded-lg shadow hover:shadow-lg transition-shadow";
+
+        card.innerHTML = `
+          <h2 class="text-xl text-gray-700 font-semibold mb-1">${user.name}</h2>
+          <p class="text-gray-700"><strong>Email:</strong> ${user.email}</p>
+          <p class="text-gray-700"><strong>Company:</strong> ${user.company.name}</p>
+          <p class="text-gray-700"><strong>City:</strong> ${user.address.city}</p>
+          <button class="mt-3 bg-blue-800 text-white px-3 py-1 rounded hover:bg-blue-950 detailsBtn">View More</button>
+          <div class="extraInfo hidden mt-2 text-sm text-gray-600">
+            <p><strong>Username:</strong> ${user.username}</p>
+            <p><strong>Phone:</strong> ${user.phone}</p>
+            <p><strong>Website:</strong> ${user.website}</p>
+          </div>
+        `;
+
+        // Toggle details
+        card.querySelector(".detailsBtn").addEventListener("click", (e) => {
+          const extraInfo = card.querySelector(".extraInfo");
+          extraInfo.classList.toggle("hidden");
+          e.target.textContent = extraInfo.classList.contains("hidden") ? "View More" : "View Less";
+        });
+
+        userGrid.appendChild(card);
+      });
+    }
+
+    // Search
+    searchInput.addEventListener("input", () => {
+      const searchValue = searchInput.value.toLowerCase();
+      const filtered = allUsers.filter(user => 
+        user.name.toLowerCase().includes(searchValue) ||
+        user.username.toLowerCase().includes(searchValue)
+      );
+      displayUsers(filtered);
+    });
+
+    // Dark mode toggle
+    darkModeToggle.addEventListener("click", () => {
+      appBody.classList.toggle("bg-gray-900");
+      appBody.classList.toggle("text-white");
+      appBody.classList.toggle("text-gray-900");
+      document.querySelectorAll(".bg-white").forEach(el => el.classList.toggle("bg-gray-800"));
+      document.querySelectorAll(".text-gray-700").forEach(el => el.classList.toggle("text-gray-900"));
+    });
+
+    // Init
+    fetchUsers();
+  </script>
+</body>
+</html>
